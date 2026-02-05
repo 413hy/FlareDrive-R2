@@ -183,14 +183,14 @@
       </ul>
     </Dialog>
     <Dialog v-model="showEditor">
-      <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; flex-direction: column; gap: 10px; width: 80vw; max-width: 960px; height: 70vh;">
         <div style="font-weight: 600;">
           在线编辑：<span v-text="editorFileKey"></span>
         </div>
         <textarea
           v-model="editorContent"
           placeholder="请输入内容..."
-          style="width: 100%; min-height: 300px; resize: vertical; padding: 10px; border-radius: 6px; border: 1px solid #ccc;"
+          style="width: 100%; flex: 1; resize: none; padding: 10px; border-radius: 6px; border: 1px solid #ccc;"
         ></textarea>
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
           <button @click="showEditor = false">取消</button>
