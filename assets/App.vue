@@ -41,7 +41,7 @@
           </svg>
         </button>
         <Menu v-model="showMenu"
-          :items="[{ text: '按照名称排序A-Z' }, { text: '按照大小递增排序' }, { text: '按照大小递减排序' }, { text: '粘贴文件到网盘' }]"
+          :items="[{ text: '按照名称排序A-Z' }, { text: '按照大小递增排序' }, { text: '按照大小递减排序' }, { text: '粘贴文件到网盘' }, { text: '登录' }]"
           @click="onMenuClick" />
       </div>
     </div>
@@ -151,6 +151,11 @@
           </button>
         </li>
         <li>
+          <button @click="openEditor(focusedItem)">
+            <span>在线编辑</span>
+          </button>
+        </li>
+        <li>
           <a :href="`/raw/${focusedItem.key}`" target="_blank" download>
             <span>下载</span>
           </a>
@@ -176,6 +181,24 @@
           </button>
         </li>
       </ul>
+    </Dialog>
+    <Dialog v-model="showEditor">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-weight: 600;">
+          在线编辑：<span v-text="editorFileKey"></span>
+        </div>
+        <textarea
+          v-model="editorContent"
+          placeholder="请输入内容..."
+          style="width: 100%; min-height: 300px; resize: vertical; padding: 10px; border-radius: 6px; border: 1px solid #ccc;"
+        ></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button @click="showEditor = false">取消</button>
+          <button :disabled="editorSaving" @click="saveEditor">
+            {{ editorSaving ? "保存中..." : "保存并上传" }}
+          </button>
+        </div>
+      </div>
     </Dialog>
     <div style="flex:1"></div>
     <Footer />
@@ -208,6 +231,10 @@ export default {
     showContextMenu: false,
     showMenu: false,
     showUploadPopup: false,
+    showEditor: false,
+    editorContent: "",
+    editorFileKey: "",
+    editorSaving: false,
     uploadProgress: null,
     uploadQueue: [],
     backgroundImageUrl: "/assets/bg-light.webp"
@@ -269,8 +296,15 @@ export default {
       this.folders = [];
       this.loading = true;
       fetch(`/api/children/${this.cwd}`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            this.loading = false;
+            return null;
+          }
+          return res.json();
+        })
         .then((files) => {
+          if (!files) return;
           this.files = files.value;
           if (this.order) {
             this.files.sort((a, b) => {
@@ -317,6 +351,12 @@ export default {
           break;
         case "粘贴文件到网盘":
           return this.pasteFile();
+        case "登录":
+          return fetch("/api/auth")
+            .then((value) => {
+              if (value.redirected) window.location.href = value.url;
+            })
+            .catch(() => { });
       }
       this.files.sort((a, b) => {
         if (this.order === "大小↑") {
@@ -422,6 +462,39 @@ export default {
       await this.copyPaste(key, `${this.cwd}${newName}`);
       await axios.delete(`/api/write/items/${key}`);
       this.fetchFiles();
+    },
+
+    async openEditor(file) {
+      this.showContextMenu = false;
+      this.editorFileKey = file.key;
+      this.editorContent = "";
+      this.editorSaving = false;
+      try {
+        const response = await fetch(`/raw/${file.key}`);
+        if (!response.ok) {
+          throw new Error("无法读取文件内容");
+        }
+        this.editorContent = await response.text();
+        this.showEditor = true;
+      } catch (error) {
+        alert("读取文件失败，请确认权限或文件类型是否支持在线编辑。");
+      }
+    },
+
+    async saveEditor() {
+      if (!this.editorFileKey) return;
+      this.editorSaving = true;
+      try {
+        await axios.put(`/api/write/items/${this.editorFileKey}`, this.editorContent, {
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+        });
+        this.showEditor = false;
+        this.fetchFiles();
+      } catch (error) {
+        alert("保存失败，请检查权限后重试。");
+      } finally {
+        this.editorSaving = false;
+      }
     },
 
     async moveFile(key) {
