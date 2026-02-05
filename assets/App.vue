@@ -325,7 +325,7 @@ export default {
         case "粘贴文件到网盘":
           return this.pasteFile();
         case "登录":
-          return fetch("/api/write/test/")
+          return fetch("/api/auth")
             .then((value) => {
               if (value.redirected) window.location.href = value.url;
             })
