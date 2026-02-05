@@ -1,7 +1,7 @@
-import { get_auth_status } from "@/utils/auth";
+import { is_authenticated } from "@/utils/auth";
 
 export async function onRequest(context) {
-  if (!get_auth_status(context)) {
+  if (!is_authenticated(context)) {
     const headers = new Headers();
     headers.set("WWW-Authenticate", 'Basic realm="需要登录"');
     return new Response("没有操作权限", { status: 401, headers });

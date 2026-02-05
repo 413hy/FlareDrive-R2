@@ -44,3 +44,12 @@ export function get_auth_status(context) {
   if (!dopath) return false;
   return can_access_path(context, dopath);
 }
+
+export function is_authenticated(context) {
+  const headers = new Headers(context.request.headers);
+  const authorization = headers.get("Authorization");
+  if (!authorization || !authorization.startsWith("Basic ")) return false;
+  const account = atob(authorization.split("Basic ")[1]);
+  if (!account) return false;
+  return Boolean(context.env[account]);
+}
