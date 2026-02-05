@@ -183,7 +183,7 @@
       </ul>
     </Dialog>
     <Dialog v-model="showEditor">
-      <div style="display: flex; flex-direction: column; gap: 10px; width: 80vw; max-width: 960px; height: 70vh;">
+      <div style="display: flex; flex-direction: column; gap: 10px; width: 90vw; max-width: 1200px; height: 80vh;">
         <div style="font-weight: 600;">
           在线编辑：<span v-text="editorFileKey"></span>
         </div>
