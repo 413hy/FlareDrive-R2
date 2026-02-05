@@ -41,7 +41,7 @@
           </svg>
         </button>
         <Menu v-model="showMenu"
-          :items="[{ text: '按照名称排序A-Z' }, { text: '按照大小递增排序' }, { text: '按照大小递减排序' }, { text: '粘贴文件到网盘' }]"
+          :items="[{ text: '按照名称排序A-Z' }, { text: '按照大小递增排序' }, { text: '按照大小递减排序' }, { text: '粘贴文件到网盘' }, { text: '登录' }]"
           @click="onMenuClick" />
       </div>
     </div>
@@ -324,6 +324,12 @@ export default {
           break;
         case "粘贴文件到网盘":
           return this.pasteFile();
+        case "登录":
+          return fetch("/api/write/test/")
+            .then((value) => {
+              if (value.redirected) window.location.href = value.url;
+            })
+            .catch(() => { });
       }
       this.files.sort((a, b) => {
         if (this.order === "大小↑") {
